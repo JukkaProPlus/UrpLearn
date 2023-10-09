@@ -4,18 +4,20 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-public class CameraRender
+public partial class CameraRender
 {
-    private static Material errorMaterial;
-    private static ShaderTagId[] legacyShaderTagIds =
-    {
-        new ShaderTagId("Always"),
-        new ShaderTagId("ForwardBase"),
-        new ShaderTagId("PrepassBase"),
-        new ShaderTagId("Vertex"),
-        new ShaderTagId("VertexLMRGBM"),
-        new ShaderTagId("VertexLM"),
-    };
+
+
+    // private static Material errorMaterial;
+    // private static ShaderTagId[] legacyShaderTagIds =
+    // {
+    //     new ShaderTagId("Always"),
+    //     new ShaderTagId("ForwardBase"),
+    //     new ShaderTagId("PrepassBase"),
+    //     new ShaderTagId("Vertex"),
+    //     new ShaderTagId("VertexLMRGBM"),
+    //     new ShaderTagId("VertexLM"),
+    // };
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
     private const string bufferName = "Render Camera";
 
@@ -31,6 +33,13 @@ public class CameraRender
     {
         this.camera = camera;
         this.context = context;
+        
+        //设置命令缓冲区的名字
+        PrepareBuffer();
+        
+        // 在Game视图绘制的几何体也绘制到Scene视图中
+        PrepareForSceneWindow();
+        
         if (!Cull())
         {
             return;
@@ -43,52 +52,55 @@ public class CameraRender
         //绘制SRP不支持的着色器类型
         DrawUnsupportedShaders();
         
+        
+        //绘制Gizmos
+        DrawGizmos();
         Submit();
     }
-    //errorMaterial
-    /// <summary>
-    /// 绘制SRP不支持的内置Shader类型
-    /// </summary>
-    void DrawUnsupportedShaders()
-    {
-        if (errorMaterial == null)
-        {
-            errorMaterial = new Material(Shader.Find("Hidden/InternalErrorShader"));
-        }
-        //数组第一个元素用来构造DrawingSettings对象的时候设置
-        var drawingSettings = new DrawingSettings(legacyShaderTagIds[0], new SortingSettings(camera))
-        {
-            overrideMaterial = errorMaterial
-        };
-        for (int i = 1; i < legacyShaderTagIds.Length; i++)
-        {
-            //遍历数组，逐个设置着色器的Passname, 从i = 1开始，因为i = 0的时候已经设置过了
-            drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
-        }
-        //使用默认设置即刻,反正画出来的都是不支持的
-        var filteringSettings = FilteringSettings.defaultValue;
-        //绘制不支持的ShaderTag类型的物体
-        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
-    }
-
-    /// <summary>
-    /// 绘制SRP不支持的着色器类型
-    /// </summary>
-    void DrawUnsupportedShaders1()
-    {
-        
-        //数组第一个元素用来构造DrawingSettings对象的时候设置
-        var drawingSettings = new DrawingSettings(legacyShaderTagIds[0], new SortingSettings(camera));
-        for (int i = 1; i < legacyShaderTagIds.Length; i++)
-        {
-            //遍历数组，逐个设置着色器的Passname, 从i = 1开始，因为i = 0的时候已经设置过了
-            drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
-        }
-        //使用默认设置即刻,反正画出来的都是不支持的
-        var filteringSettings = FilteringSettings.defaultValue;
-        //绘制不支持的ShaderTag类型的物体
-        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
-    }
+    // //errorMaterial
+    // /// <summary>
+    // /// 绘制SRP不支持的内置Shader类型
+    // /// </summary>
+    // void DrawUnsupportedShaders()
+    // {
+    //     if (errorMaterial == null)
+    //     {
+    //         errorMaterial = new Material(Shader.Find("Hidden/InternalErrorShader"));
+    //     }
+    //     //数组第一个元素用来构造DrawingSettings对象的时候设置
+    //     var drawingSettings = new DrawingSettings(legacyShaderTagIds[0], new SortingSettings(camera))
+    //     {
+    //         overrideMaterial = errorMaterial
+    //     };
+    //     for (int i = 1; i < legacyShaderTagIds.Length; i++)
+    //     {
+    //         //遍历数组，逐个设置着色器的Passname, 从i = 1开始，因为i = 0的时候已经设置过了
+    //         drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
+    //     }
+    //     //使用默认设置即刻,反正画出来的都是不支持的
+    //     var filteringSettings = FilteringSettings.defaultValue;
+    //     //绘制不支持的ShaderTag类型的物体
+    //     context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+    // }
+    //
+    // /// <summary>
+    // /// 绘制SRP不支持的着色器类型
+    // /// </summary>
+    // void DrawUnsupportedShaders1()
+    // {
+    //     
+    //     //数组第一个元素用来构造DrawingSettings对象的时候设置
+    //     var drawingSettings = new DrawingSettings(legacyShaderTagIds[0], new SortingSettings(camera));
+    //     for (int i = 1; i < legacyShaderTagIds.Length; i++)
+    //     {
+    //         //遍历数组，逐个设置着色器的Passname, 从i = 1开始，因为i = 0的时候已经设置过了
+    //         drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
+    //     }
+    //     //使用默认设置即刻,反正画出来的都是不支持的
+    //     var filteringSettings = FilteringSettings.defaultValue;
+    //     //绘制不支持的ShaderTag类型的物体
+    //     context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
+    // }
 
     /// <summary>
     /// 设置相机的属性和矩阵
@@ -96,12 +108,13 @@ public class CameraRender
     void Setup()
     {
         context.SetupCameraProperties(camera);
-        buffer.ClearRenderTarget(true, true, Color.clear);
-        buffer.BeginSample(bufferName);
-        // buffer.BeginSample(bufferName + "1");
-        // buffer.BeginSample(bufferName + "2");
-        // buffer.BeginSample(bufferName + "3");
-        // buffer.BeginSample(bufferName + "4");
+
+        //得到相机的clear flags
+        CameraClearFlags flags = camera.clearFlags;
+        
+        //设置相机清除状态
+        buffer.ClearRenderTarget(flags <= CameraClearFlags.Depth, flags == CameraClearFlags.Color, flags == CameraClearFlags.Color ? camera.backgroundColor.linear:Color.clear);
+        buffer.BeginSample(SampleName);
         ExecuteBuffer();
     }
 
@@ -144,11 +157,7 @@ public class CameraRender
     /// </summary>
     void Submit()
     {
-        // buffer.EndSample(bufferName + "4");
-        // buffer.EndSample(bufferName + "3");
-        // buffer.EndSample(bufferName + "2");
-        // buffer.EndSample(bufferName + "1");
-        buffer.EndSample(bufferName);
+        buffer.EndSample(SampleName);
         ExecuteBuffer();
         context.Submit();
     }

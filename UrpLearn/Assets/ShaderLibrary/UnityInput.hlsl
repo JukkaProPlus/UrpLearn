@@ -1,7 +1,7 @@
 ﻿//unity标准输入库
 #ifndef CUSTOM_UNITY_INPUT_INCLUDED
 #define CUSTOM_UNITY_INPUT_INCLUDED
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+// #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 
 CBUFFER_START(UnityPerDraw)
 

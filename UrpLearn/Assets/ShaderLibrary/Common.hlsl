@@ -2,6 +2,8 @@
 #ifndef CUSTOM_COMMON_INCLUDED
 #define CUSTOM_COMMON_INCLUDED
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+
 //使用UnityInput里面的转换矩阵前先include进来
 #include "./UnityInput.hlsl"
 
@@ -12,9 +14,11 @@
 #define UNITY_MATRIX_VP unity_MatrixVP
 #define UNITY_MATRIX_P glstate_matrix_projection
 
+#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
+
 #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/SpaceTransforms.hlsl"
 
-#include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
+
 
 // //函数功能:顶点从模型空间转换到世界空间
 // float3 TransformObjectToWorld(float3 positionOS)

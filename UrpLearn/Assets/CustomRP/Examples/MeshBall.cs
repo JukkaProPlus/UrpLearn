@@ -14,20 +14,36 @@ public class MeshBall : MonoBehaviour
     private Vector4[] baseColors = new Vector4[1023];
 
     private MaterialPropertyBlock block;
+    private int count = 0;
+    public int changeCount = 10;
 
     private void Awake()
+    {
+        Temp();
+    }
+
+    void Temp()
     {
         for (int i = 0; i < matrices.Length; i++)
         {
             matrices[i] = Matrix4x4.TRS(Random.insideUnitSphere * 10f,
                 Quaternion.Euler(Random.value * 360f, Random.value * 360f, Random.value * 360f),
                 Vector3.one * Random.Range(0.5f, 1.5f));
-            baseColors[i] = new Vector4(Random.value, Random.value, Random.value, Random.Range(0.5f, 1f));
+            float a = Random.Range(0.5f, 1f);
+            // a = .5f;
+            baseColors[i] = new Vector4(Random.value, Random.value, Random.value, a);
         }
     }
 
     void Update()
     {
+        if (count >= changeCount)
+        {
+            count = 0;
+            Temp();
+        }
+
+        count++;
         if (block == null)
         {
             block = new MaterialPropertyBlock();
